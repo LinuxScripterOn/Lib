@@ -387,7 +387,7 @@ function Linux.Create(config)
             CanvasPosition = Vector2.new(0, 0)
         })
 
-        Linux.Instance("UIListLayout", {
+        local Container1ListLayout = Linux.Instance("UIListLayout", {
             Parent = Container1,
             Padding = UDim.new(0, 3),
             HorizontalAlignment = Enum.HorizontalAlignment.Left,
@@ -415,7 +415,7 @@ function Linux.Create(config)
             CanvasPosition = Vector2.new(0, 0)
         })
 
-        Linux.Instance("UIListLayout", {
+        local Container2ListLayout = Linux.Instance("UIListLayout", {
             Parent = Container2,
             Padding = UDim.new(0, 3),
             HorizontalAlignment = Enum.HorizontalAlignment.Left,
@@ -506,14 +506,28 @@ function Linux.Create(config)
         local TabElements = {}
         local elementOrder1 = 0
         local elementOrder2 = 0
+        local lastWasDropdown1 = false
+        local lastWasDropdown2 = false
 
         function TabElements.Button(config)
             local container = config.Container == 2 and Container2 or Container1
             local elementOrder = config.Container == 2 and elementOrder2 or elementOrder1
             if config.Container == 2 then
                 elementOrder2 = elementOrder2 + 1
+                if lastWasDropdown2 then
+                    Container2ListLayout.Padding = UDim.new(0, 1)
+                else
+                    Container2ListLayout.Padding = UDim.new(0, 3)
+                end
+                lastWasDropdown2 = false
             else
                 elementOrder1 = elementOrder1 + 1
+                if lastWasDropdown1 then
+                    Container1ListLayout.Padding = UDim.new(0, 1)
+                else
+                    Container1ListLayout.Padding = UDim.new(0, 3)
+                end
+                lastWasDropdown1 = false
             end
 
             local BtnFrame = Linux.Instance("Frame", {
@@ -617,8 +631,20 @@ function Linux.Create(config)
             local elementOrder = config.Container == 2 and elementOrder2 or elementOrder1
             if config.Container == 2 then
                 elementOrder2 = elementOrder2 + 1
+                if lastWasDropdown2 then
+                    Container2ListLayout.Padding = UDim.new(0, 1)
+                else
+                    Container2ListLayout.Padding = UDim.new(0, 3)
+                end
+                lastWasDropdown2 = false
             else
                 elementOrder1 = elementOrder1 + 1
+                if lastWasDropdown1 then
+                    Container1ListLayout.Padding = UDim.new(0, 1)
+                else
+                    Container1ListLayout.Padding = UDim.new(0, 3)
+                end
+                lastWasDropdown1 = false
             end
 
             local Toggle = Linux.Instance("Frame", {
@@ -725,8 +751,10 @@ function Linux.Create(config)
             local elementOrder = config.Container == 2 and elementOrder2 or elementOrder1
             if config.Container == 2 then
                 elementOrder2 = elementOrder2 + 1
+                lastWasDropdown2 = true
             else
                 elementOrder1 = elementOrder1 + 1
+                lastWasDropdown1 = true
             end
 
             local Dropdown = Linux.Instance("Frame", {
@@ -796,7 +824,7 @@ function Linux.Create(config)
 
             local DropFrame = Linux.Instance("ScrollingFrame", {
                 Parent = container,
-                BackgroundColor3 = Color3.fromRGB(15, 15, 18),
+                BackgroundColor3 = Color3.fromRGB(22, 22, 27),
                 BorderColor3 = Color3.fromRGB(35, 35, 39),
                 BorderSizePixel = 2,
                 Size = UDim2.new(1, -5, 0, 0),
@@ -815,7 +843,7 @@ function Linux.Create(config)
 
             Linux.Instance("UIListLayout", {
                 Parent = DropFrame,
-                Padding = UDim.new(0, 2),
+                Padding = UDim.new(0, 1),
                 HorizontalAlignment = Enum.HorizontalAlignment.Left
             })
 
@@ -829,7 +857,7 @@ function Linux.Create(config)
 
             local function UpdateDropSize()
                 local optionHeight = 25
-                local paddingBetween = 2
+                local paddingBetween = 1
                 local paddingTop = 5
                 local maxHeight = 150
                 local numOptions = #Options
@@ -855,7 +883,7 @@ function Linux.Create(config)
                     for _, opt in pairs(Options) do
                         local OptBtn = Linux.Instance("TextButton", {
                             Parent = DropFrame,
-                            BackgroundColor3 = Color3.fromRGB(15, 15, 18),
+                            BackgroundColor3 = Color3.fromRGB(22, 22, 27),
                             BorderColor3 = Color3.fromRGB(35, 35, 39),
                             BorderSizePixel = 2,
                             Size = UDim2.new(1, -5, 0, 25),
@@ -940,8 +968,20 @@ function Linux.Create(config)
             local elementOrder = config.Container == 2 and elementOrder2 or elementOrder1
             if config.Container == 2 then
                 elementOrder2 = elementOrder2 + 1
+                if lastWasDropdown2 then
+                    Container2ListLayout.Padding = UDim.new(0, 1)
+                else
+                    Container2ListLayout.Padding = UDim.new(0, 3)
+                end
+                lastWasDropdown2 = false
             else
                 elementOrder1 = elementOrder1 + 1
+                if lastWasDropdown1 then
+                    Container1ListLayout.Padding = UDim.new(0, 1)
+                else
+                    Container1ListLayout.Padding = UDim.new(0, 3)
+                end
+                lastWasDropdown1 = false
             end
 
             local Slider = Linux.Instance("Frame", {
@@ -1094,8 +1134,20 @@ function Linux.Create(config)
             local elementOrder = config.Container == 2 and elementOrder2 or elementOrder1
             if config.Container == 2 then
                 elementOrder2 = elementOrder2 + 1
+                if lastWasDropdown2 then
+                    Container2ListLayout.Padding = UDim.new(0, 1)
+                else
+                    Container2ListLayout.Padding = UDim.new(0, 3)
+                end
+                lastWasDropdown2 = false
             else
                 elementOrder1 = elementOrder1 + 1
+                if lastWasDropdown1 then
+                    Container1ListLayout.Padding = UDim.new(0, 1)
+                else
+                    Container1ListLayout.Padding = UDim.new(0, 3)
+                end
+                lastWasDropdown1 = false
             end
 
             local Input = Linux.Instance("Frame", {
@@ -1205,8 +1257,20 @@ function Linux.Create(config)
             local elementOrder = config.Container == 2 and elementOrder2 or elementOrder1
             if config.Container == 2 then
                 elementOrder2 = elementOrder2 + 1
+                if lastWasDropdown2 then
+                    Container2ListLayout.Padding = UDim.new(0, 1)
+                else
+                    Container2ListLayout.Padding = UDim.new(0, 3)
+                end
+                lastWasDropdown2 = false
             else
                 elementOrder1 = elementOrder1 + 1
+                if lastWasDropdown1 then
+                    Container1ListLayout.Padding = UDim.new(0, 1)
+                else
+                    Container1ListLayout.Padding = UDim.new(0, 3)
+                end
+                lastWasDropdown1 = false
             end
 
             local LabelFrame = Linux.Instance("Frame", {
@@ -1289,8 +1353,20 @@ function Linux.Create(config)
             local elementOrder = config.Container == 2 and elementOrder2 or elementOrder1
             if config.Container == 2 then
                 elementOrder2 = elementOrder2 + 1
+                if lastWasDropdown2 then
+                    Container2ListLayout.Padding = UDim.new(0, 1)
+                else
+                    Container2ListLayout.Padding = UDim.new(0, 3)
+                end
+                lastWasDropdown2 = false
             else
                 elementOrder1 = elementOrder1 + 1
+                if lastWasDropdown1 then
+                    Container1ListLayout.Padding = UDim.new(0, 1)
+                else
+                    Container1ListLayout.Padding = UDim.new(0, 3)
+                end
+                lastWasDropdown1 = false
             end
 
             local Section = Linux.Instance("Frame", {
@@ -1325,8 +1401,20 @@ function Linux.Create(config)
             local elementOrder = config.Container == 2 and elementOrder2 or elementOrder1
             if config.Container == 2 then
                 elementOrder2 = elementOrder2 + 1
+                if lastWasDropdown2 then
+                    Container2ListLayout.Padding = UDim.new(0, 1)
+                else
+                    Container2ListLayout.Padding = UDim.new(0, 3)
+                end
+                lastWasDropdown2 = false
             else
                 elementOrder1 = elementOrder1 + 1
+                if lastWasDropdown1 then
+                    Container1ListLayout.Padding = UDim.new(0, 1)
+                else
+                    Container1ListLayout.Padding = UDim.new(0, 3)
+                end
+                lastWasDropdown1 = false
             end
 
             local ParagraphFrame = Linux.Instance("Frame", {
@@ -1399,8 +1487,20 @@ function Linux.Create(config)
             local elementOrder = config.Container == 2 and elementOrder2 or elementOrder1
             if config.Container == 2 then
                 elementOrder2 = elementOrder2 + 1
+                if lastWasDropdown2 then
+                    Container2ListLayout.Padding = UDim.new(0, 1)
+                else
+                    Container2ListLayout.Padding = UDim.new(0, 3)
+                end
+                lastWasDropdown2 = false
             else
                 elementOrder1 = elementOrder1 + 1
+                if lastWasDropdown1 then
+                    Container1ListLayout.Padding = UDim.new(0, 1)
+                else
+                    Container1ListLayout.Padding = UDim.new(0, 3)
+                end
+                lastWasDropdown1 = false
             end
 
             local NotificationFrame = Linux.Instance("Frame", {

@@ -207,22 +207,6 @@ function Linux.Create(config)
     local isMobile = InputService.TouchEnabled and not InputService.KeyboardEnabled
     local uiSize = isMobile and (config.SizeMobile or UDim2.fromOffset(300, 500)) or (config.SizePC or UDim2.fromOffset(550, 355))
 
-    local shadowOffset = 12
-    local shadowSize = UDim2.new(0, uiSize.X.Offset + shadowOffset, 0, uiSize.Y.Offset + shadowOffset)
-
-    local MainShadow = Linux.Instance("ImageLabel", {
-        Parent = LinuxUI,
-        BackgroundTransparency = 1,
-        Size = shadowSize,
-        Position = UDim2.new(0.5, -(uiSize.X.Offset + shadowOffset) / 2, 0.5, -(uiSize.Y.Offset + shadowOffset) / 2),
-        Image = "rbxassetid://1316045217",
-        ImageColor3 = Color3.fromRGB(0, 0, 0),
-        ImageTransparency = 0.8,
-        ScaleType = Enum.ScaleType.Slice,
-        SliceCenter = Rect.new(10, 10, 246, 246),
-        ZIndex = 0
-    })
-
     local Main = Linux.Instance("Frame", {
         Parent = LinuxUI,
         BackgroundColor3 = Color3.fromRGB(30, 30, 36),
@@ -239,27 +223,6 @@ function Linux.Create(config)
         Parent = Main,
         CornerRadius = UDim.new(0, 10)
     })
-
-    local function UpdateShadowPosition()
-        MainShadow.Position = Main.Position
-    end
-
-    local dragConnection
-    Main.InputBegan:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-            dragConnection = RunService.RenderStepped:Connect(UpdateShadowPosition)
-        end
-    end)
-
-    Main.InputEnded:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-            if dragConnection then
-                dragConnection:Disconnect()
-                dragConnection = nil
-            end
-            UpdateShadowPosition()
-        end
-    end)
 
     local TopBar = Linux.Instance("Frame", {
         Parent = Main,
@@ -341,7 +304,6 @@ function Linux.Create(config)
         if input.KeyCode == Enum.KeyCode.LeftAlt then
             isHidden = not isHidden
             Main.Visible = not isHidden
-            MainShadow.Visible = not isHidden
         end
     end)
 
@@ -468,7 +430,7 @@ function Linux.Create(config)
 
         local TitleFrame = Linux.Instance("Frame", {
             Parent = Content,
-            BackgroundColor3 = Color3.fromRGB(18, 18, 22),
+            BackgroundColor3 = Color3.fromRGB(30, 30, 36),
             BorderSizePixel = 0,
             Size = UDim2.new(1, -5, 0, 30),
             Position = UDim2.new(0, 5, 0, 0),
@@ -599,9 +561,9 @@ function Linux.Create(config)
             })
 
             local hoverColor = Color3.fromRGB(30, 30, 35)
-            local clickColor = Color3.fromRGB(100, 59, 154)
             local originalColor = Color3.fromRGB(25, 25, 29)
             local tweenInfo = TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
+            local gradient = nil
 
             Btn.MouseEnter:Connect(function()
                 TweenService:Create(BtnFrame, tweenInfo, {BackgroundColor3 = hoverColor}):Play()
@@ -609,17 +571,36 @@ function Linux.Create(config)
 
             Btn.MouseLeave:Connect(function()
                 TweenService:Create(BtnFrame, tweenInfo, {BackgroundColor3 = originalColor}):Play()
+                if gradient then
+                    gradient:Destroy()
+                    gradient = nil
+                end
             end)
 
             Btn.InputBegan:Connect(function(input)
                 if input.UserInputType == Enum.UserInputType.Touch or input.UserInputType == Enum.UserInputType.MouseButton1 then
-                    TweenService:Create(BtnFrame, tweenInfo, {BackgroundColor3 = clickColor}):Play()
+                    TweenService:Create(BtnFrame, tweenInfo, {BackgroundColor3 = Color3.fromRGB(30, 30, 36)}):Play()
+                    if gradient then
+                        gradient:Destroy()
+                    end
+                    gradient = Linux.Instance("UIGradient", {
+                        Parent = BtnFrame,
+                        Color = ColorSequence.new({
+                            ColorSequenceKeypoint.new(0, Color3.fromRGB(100, 59, 154)),
+                            ColorSequenceKeypoint.new(1, Color3.fromRGB(70, 41, 108))
+                        }),
+                        Rotation = 45
+                    })
                 end
             end)
 
             Btn.InputEnded:Connect(function(input)
                 if input.UserInputType == Enum.UserInputType.Touch or input.UserInputType == Enum.UserInputType.MouseButton1 then
                     TweenService:Create(BtnFrame, tweenInfo, {BackgroundColor3 = originalColor}):Play()
+                    if gradient then
+                        gradient:Destroy()
+                        gradient = nil
+                    end
                 end
             end)
 
@@ -797,7 +778,7 @@ function Linux.Create(config)
                 Size = UDim2.new(1, -40, 1, 0),
                 Font = Enum.Font.Code,
                 Text = tostring(SelectedValue),
-                TextColor3 = Color3.fromRGB(190, 190, 190),
+                TextColor3 = Color3.fromRGB(205, 205, 205),
                 TextSize = 14,
                 TextXAlignment = Enum.TextXAlignment.Right,
                 ZIndex = 2
@@ -880,7 +861,7 @@ function Linux.Create(config)
                             Size = UDim2.new(1, -5, 0, 25),
                             Font = Enum.Font.Code,
                             Text = tostring(opt),
-                            TextColor3 = opt == SelectedValue and Color3.fromRGB(190, 190, 190) or Color3.fromRGB(180, 180, 180),
+                            TextColor3 = opt == SelectedValue and Color3.fromRGB(205, 205, 205) or Color3.fromRGB(180, 180, 180),
                             TextSize = 14,
                             TextXAlignment = Enum.TextXAlignment.Center,
                             ZIndex = 3,
@@ -895,9 +876,10 @@ function Linux.Create(config)
                         OptBtn.MouseButton1Click:Connect(function()
                             SelectedValue = opt
                             Selected.Text = tostring(opt)
+                            Selected.TextColor3 = Color3.fromRGB(205, 205, 205)
                             for _, btn in pairs(DropFrame:GetChildren()) do
                                 if btn:IsA("TextButton") then
-                                    btn.TextColor3 = btn.Text == tostring(opt) and Color3.fromRGB(190, 190, 190) or Color3.fromRGB(180, 180, 180)
+                                    btn.TextColor3 = btn.Text == tostring(opt) and Color3.fromRGB(205, 205, 205) or Color3.fromRGB(180, 180, 180)
                                 end
                             end
                             Linux:SaveConfig("Dropdown_" .. config.Name, SelectedValue, shouldSave, configFolder)
@@ -923,6 +905,7 @@ function Linux.Create(config)
                 Options = newOptions or {}
                 SelectedValue = Options[1] or "None"
                 Selected.Text = tostring(SelectedValue)
+                Selected.TextColor3 = Color3.fromRGB(205, 205, 205)
                 Linux:SaveConfig("Dropdown_" .. config.Name, SelectedValue, shouldSave, configFolder)
                 PopulateOptions()
                 spawn(function() Linux:SafeCallback(config.Callback, SelectedValue) end)
@@ -932,9 +915,10 @@ function Linux.Create(config)
                 if table.find(Options, value) then
                     SelectedValue = value
                     Selected.Text = tostring(value)
+                    Selected.TextColor3 = Color3.fromRGB(205, 205, 205)
                     for _, btn in pairs(DropFrame:GetChildren()) do
                         if btn:IsA("TextButton") then
-                            btn.TextColor3 = btn.Text == tostring(value) and Color3.fromRGB(190, 190, 190) or Color3.fromRGB(180, 180, 180)
+                            btn.TextColor3 = btn.Text == tostring(value) and Color3.fromRGB(205, 205, 205) or Color3.fromRGB(180, 180, 180)
                         end
                     end
                     Linux:SaveConfig("Dropdown_" .. config.Name, SelectedValue, shouldSave, configFolder)
@@ -1381,7 +1365,7 @@ function Linux.Create(config)
                 Position = UDim2.new(0, 5, 0, 25),
                 Font = Enum.Font.Code,
                 Text = config.Content or "Content",
-                TextColor3 = Color3.fromRGB(190, 190, 190),
+                TextColor3 = Color3.fromRGB(150, 150, 150),
                 TextSize = 14,
                 TextXAlignment = Enum.TextXAlignment.Left,
                 TextWrapped = true,

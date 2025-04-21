@@ -115,7 +115,7 @@ function Linux:Notify(config)
         Position = UDim2.new(0, 5, 0, 25),
         Font = Enum.Font.Code,
         Text = config.Content or "Content",
-        TextColor3 = Color3.fromRGB(190, 190, 190),
+        TextColor3 = Color3.fromRGB(150, 150, 150),
         TextSize = 14,
         TextWrapped = true,
         TextXAlignment = Enum.TextXAlignment.Left,
@@ -131,7 +131,7 @@ function Linux:Notify(config)
             Position = UDim2.new(0, 5, 0, 45),
             Font = Enum.Font.Code,
             Text = config.SubContent,
-            TextColor3 = Color3.fromRGB(190, 190, 190),
+            TextColor3 = Color3.fromRGB(150, 150, 150),
             TextSize = 12,
             TextWrapped = true,
             TextXAlignment = Enum.TextXAlignment.Left,
@@ -775,7 +775,7 @@ function Linux.Create(config)
             local Selected = Linux.Instance("TextLabel", {
                 Parent = DropdownButton,
                 BackgroundTransparency = 1,
-                Size = UDim2.new(1, -40, 1, 0),
+                Size = UDim2.new(1, -10, 1, 0),
                 Font = Enum.Font.Code,
                 Text = tostring(SelectedValue),
                 TextColor3 = Color3.fromRGB(205, 205, 205),
@@ -784,28 +784,19 @@ function Linux.Create(config)
                 ZIndex = 2
             })
 
-            local Arrow = Linux.Instance("ImageLabel", {
-                Parent = DropdownButton,
-                BackgroundTransparency = 1,
-                Size = UDim2.new(0, 14, 0, 14),
-                Position = UDim2.new(1, -20, 0.5, -7),
-                Image = "rbxassetid://10709767827",
-                ImageColor3 = Color3.fromRGB(190, 190, 190),
-                ZIndex = 2
-            })
-
             local DropFrame = Linux.Instance("ScrollingFrame", {
-                Parent = container,
-                BackgroundColor3 = Color3.fromRGB(19, 19, 23),
+                Parent = Dropdown,
+                BackgroundColor3 = Color3.fromRGB(25, 25, 29),
                 BorderColor3 = Color3.fromRGB(35, 35, 39),
                 BorderSizePixel = 2,
-                Size = UDim2.new(1, -5, 0, 0),
+                Size = UDim2.new(0, 150, 0, 150),
+                Position = UDim2.new(1, -155, 0, 39),
                 CanvasSize = UDim2.new(0, 0, 0, 0),
                 AutomaticCanvasSize = Enum.AutomaticSize.Y,
                 ScrollBarThickness = 0,
                 ScrollingEnabled = true,
-                ZIndex = 3,
-                LayoutOrder = elementOrder + 1
+                ZIndex = 10,
+                Visible = false
             })
 
             Linux.Instance("UICorner", {
@@ -827,24 +818,6 @@ function Linux.Create(config)
 
             local IsOpen = false
 
-            local function UpdateDropSize()
-                local optionHeight = 25
-                local paddingBetween = 2
-                local paddingTop = 5
-                local maxHeight = 150
-                local numOptions = #Options
-                local calculatedHeight = numOptions * optionHeight + (numOptions > 0 and (numOptions - 1) * paddingBetween + paddingTop or 0)
-                local finalHeight = math.min(calculatedHeight, maxHeight)
-
-                local tween = TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
-                if IsOpen then
-                    TweenService:Create(DropFrame, tween, {Size = UDim2.new(1, -5, 0, finalHeight)}):Play()
-                else
-                    TweenService:Create(DropFrame, tween, {Size = UDim2.new(1, -5, 0, 0)}):Play()
-                end
-                task.wait(0.2)
-            end
-
             local function PopulateOptions()
                 for _, child in pairs(DropFrame:GetChildren()) do
                     if child:IsA("TextButton") then
@@ -861,10 +834,10 @@ function Linux.Create(config)
                             Size = UDim2.new(1, -5, 0, 25),
                             Font = Enum.Font.Code,
                             Text = tostring(opt),
-                            TextColor3 = opt == SelectedValue and Color3.fromRGB(205, 205, 205) or Color3.fromRGB(180, 180, 180),
+                            TextColor3 = opt == SelectedValue and Color3.fromRGB(205, 205, 205) or Color3.fromRGB(130, 130, 130),
                             TextSize = 14,
-                            TextXAlignment = Enum.TextXAlignment.Center,
-                            ZIndex = 3,
+                            TextXAlignment = Enum.TextXAlignment.Left,
+                            ZIndex = 11,
                             AutoButtonColor = false
                         })
 
@@ -879,16 +852,16 @@ function Linux.Create(config)
                             Selected.TextColor3 = Color3.fromRGB(205, 205, 205)
                             for _, btn in pairs(DropFrame:GetChildren()) do
                                 if btn:IsA("TextButton") then
-                                    btn.TextColor3 = btn.Text == tostring(opt) and Color3.fromRGB(205, 205, 205) or Color3.fromRGB(180, 180, 180)
+                                    btn.TextColor3 = btn.Text == tostring(opt) and Color3.fromRGB(205, 205, 205) or Color3.fromRGB(130, 130, 130)
                                 end
                             end
                             Linux:SaveConfig("Dropdown_" .. config.Name, SelectedValue, shouldSave, configFolder)
-                            PopulateOptions()
+                            IsOpen = false
+                            DropFrame.Visible = false
                             spawn(function() Linux:SafeCallback(config.Callback, opt) end)
                         end)
                     end
                 end
-                UpdateDropSize()
             end
 
             if #Options > 0 then
@@ -898,7 +871,25 @@ function Linux.Create(config)
 
             DropdownButton.MouseButton1Click:Connect(function()
                 IsOpen = not IsOpen
+                DropFrame.Visible = IsOpen
                 PopulateOptions()
+            end)
+
+            local function IsMouseOverFrame(frame, mousePos)
+                local absPos = frame.AbsolutePosition
+                local absSize = frame.AbsoluteSize
+                return mousePos.X >= absPos.X and mousePos.X <= absPos.X + absSize.X and
+                       mousePos.Y >= absPos.Y and mousePos.Y <= absPos.Y + absSize.Y
+            end
+
+            InputService.InputBegan:Connect(function(input)
+                if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+                    if IsOpen and not IsMouseOverFrame(DropFrame, input.Position) and not IsMouseOverFrame(DropdownButton, input.Position) then
+                        IsOpen = false
+                        DropFrame.Visible = false
+                        PopulateOptions()
+                    end
+                end
             end)
 
             local function SetOptions(newOptions)
@@ -918,7 +909,7 @@ function Linux.Create(config)
                     Selected.TextColor3 = Color3.fromRGB(205, 205, 205)
                     for _, btn in pairs(DropFrame:GetChildren()) do
                         if btn:IsA("TextButton") then
-                            btn.TextColor3 = btn.Text == tostring(value) and Color3.fromRGB(205, 205, 205) or Color3.fromRGB(180, 180, 180)
+                            btn.TextColor3 = btn.Text == tostring(value) and Color3.fromRGB(205, 205, 205) or Color3.fromRGB(130, 130, 130)
                         end
                     end
                     Linux:SaveConfig("Dropdown_" .. config.Name, SelectedValue, shouldSave, configFolder)

@@ -23,7 +23,7 @@ function Linux:SafeCallback(Function, ...)
     if not Success then
         self:Notify({
             Title = "Callback Error",
-            Content = tostring(Error),
+            Content = Error:match(".-:(.+)$") or tostring(Error),
             Duration = 5
         })
     end
@@ -71,9 +71,16 @@ function Linux:Notify(config)
     local notificationHeight = config.SubContent and 80 or 60
     local startPosX = isMobile and 10 or 20
 
+    local parent = RunService:IsStudio() and LocalPlayer.PlayerGui or game:GetService("CoreGui")
+    for _, v in pairs(parent:GetChildren()) do
+        if v:IsA("ScreenGui") and v.Name == "NotificationHolder" then
+            v:Destroy()
+        end
+    end
+
     local NotificationHolder = Linux.Instance("ScreenGui", {
         Name = "NotificationHolder",
-        Parent = RunService:IsStudio() and LocalPlayer.PlayerGui or game:GetService("CoreGui"),
+        Parent = parent,
         ResetOnSpawn = false,
         Enabled = true,
         ZIndexBehavior = Enum.ZIndexBehavior.Sibling
@@ -81,7 +88,7 @@ function Linux:Notify(config)
 
     local Notification = Linux.Instance("Frame", {
         Parent = NotificationHolder,
-        BackgroundColor3 = Color3.fromRGB(30, 30, 36),
+        BackgroundColor3 = Color3.fromRGB(20, 20, 25),
         BorderColor3 = Color3.fromRGB(45, 45, 49),
         BorderSizePixel = 2,
         Size = UDim2.new(0, notificationWidth, 0, notificationHeight),
@@ -781,7 +788,7 @@ function Linux.Create(config)
 
             Linux.Instance("UIListLayout", {
                 Parent = DropFrame,
-                Padding = UDim.new(0, 1),
+                Padding = UDim.new(0, 3),
                 HorizontalAlignment = Enum.HorizontalAlignment.Left
             })
 
@@ -795,7 +802,7 @@ function Linux.Create(config)
 
             local function UpdateDropSize()
                 local optionHeight = 25
-                local paddingBetween = 1
+                local paddingBetween = 3
                 local paddingTop = 5
                 local maxHeight = 150
                 local numOptions = #Options
@@ -821,7 +828,7 @@ function Linux.Create(config)
                     for _, opt in pairs(Options) do
                         local OptBtn = Linux.Instance("TextButton", {
                             Parent = DropFrame,
-                            BackgroundColor3 = Color3.fromRGB(22, 22, 27),
+                            BackgroundColor3 = Color3.fromRGB(20, 20, 25),
                             BorderColor3 = Color3.fromRGB(35, 35, 39),
                             BorderSizePixel = 2,
                             Size = UDim2.new(1, -5, 0, 25),
@@ -1097,7 +1104,7 @@ function Linux.Create(config)
                 BackgroundColor3 = Color3.fromRGB(30, 30, 30),
                 BorderSizePixel = 0,
                 Size = UDim2.new(0.28, -5, 0, 26),
-                Position = UDim2.new(1, -55, 0.5, -12),
+                Position = UDim2.new(1, -60, 0.5, -12),
                 Font = Enum.Font.Code,
                 Text = Linux:LoadConfig("Input_" .. config.Name, config.Default or "", shouldSave, configFolder),
                 PlaceholderText = config.Placeholder or "Text Here",

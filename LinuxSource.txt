@@ -2,9 +2,43 @@ local TweenService = game:GetService("TweenService")
 local InputService = game:GetService("UserInputService")
 local RunService = game:GetService("RunService")
 local Players = game:GetService("Players")
+local HttpService = game:GetService("HttpService")
 local LocalPlayer = Players.LocalPlayer
 
 local Linux = {}
+
+local Themes = {
+    Default = {
+        Accent = Color3.fromRGB(0, 120, 255),
+        WindowBackground = Color3.fromRGB(19, 19, 19),
+        WindowBorder = Color3.fromRGB(255, 255, 255),
+        TabBackground = Color3.fromRGB(22, 22, 22),
+        TabBorder = Color3.fromRGB(255, 255, 255),
+        TabToggleBackground = Color3.fromRGB(22, 22, 22),
+        SectionBackground = Color3.fromRGB(19, 19, 19),
+        SectionBorder = Color3.fromRGB(50, 50, 50),
+        Text = Color3.fromRGB(255, 255, 255),
+        DisabledText = Color3.fromRGB(150, 150, 150),
+        ObjectBackground = Color3.fromRGB(22, 22, 22),
+        ObjectBorder = Color3.fromRGB(50, 50, 50),
+        DropdownOptionBackground = Color3.fromRGB(27, 27, 27)
+    },
+    Midnight = {
+        Accent = Color3.fromRGB(100, 59, 154),
+        WindowBackground = Color3.fromRGB(30, 30, 36),
+        WindowBorder = Color3.fromRGB(45, 45, 49),
+        TabBackground = Color3.fromRGB(20, 20, 24),
+        TabBorder = Color3.fromRGB(45, 45, 55),
+        TabToggleBackground = Color3.fromRGB(28, 28, 32),
+        SectionBackground = Color3.fromRGB(18, 18, 22),
+        SectionBorder = Color3.fromRGB(35, 35, 45),
+        Text = Color3.fromRGB(180, 180, 190),
+        DisabledText = Color3.fromRGB(100, 100, 110),
+        ObjectBackground = Color3.fromRGB(25, 25, 29),
+        ObjectBorder = Color3.fromRGB(35, 35, 39),
+        DropdownOptionBackground = Color3.fromRGB(19, 19, 23)
+    }
+}
 
 function Linux.Instance(class, props)
     local inst = Instance.new(class)
@@ -28,19 +62,19 @@ function Linux:SafeCallback(Function, ...)
     end
 end
 
-function Linux:SaveConfig(key, value, shouldSave)
+function Linux:SaveConfig(key, value, shouldSave, configFolder)
     if not shouldSave then return end
     local success, err = pcall(function()
-        if not isfolder("LinuxUI") then
-            makefolder("LinuxUI")
+        if not isfolder(configFolder) then
+            makefolder(configFolder)
         end
-        local configFile = "LinuxUI/config.json"
+        local configFile = configFolder .. "/config.json"
         local configData = {}
         if isfile(configFile) then
-            configData = game:GetService("HttpService"):JSONDecode(readfile(configFile))
+            configData = HttpService:JSONDecode(readfile(configFile))
         end
         configData[key] = value
-        writefile(configFile, game:GetService("HttpService"):JSONEncode(configData))
+        writefile(configFile, HttpService:JSONEncode(configData))
     end)
     if not success then
         self:Notify({
@@ -51,12 +85,12 @@ function Linux:SaveConfig(key, value, shouldSave)
     end
 end
 
-function Linux:LoadConfig(key, default, shouldSave)
+function Linux:LoadConfig(key, default, shouldSave, configFolder)
     if not shouldSave then return default end
     local success, value = pcall(function()
-        local configFile = "LinuxUI/config.json"
+        local configFile = configFolder .. "/config.json"
         if isfile(configFile) then
-            local configData = game:GetService("HttpService"):JSONDecode(readfile(configFile))
+            local configData = HttpService:JSONDecode(readfile(configFile))
             return configData[key]
         end
         return default
@@ -78,10 +112,11 @@ function Linux:Notify(config)
         ZIndexBehavior = Enum.ZIndexBehavior.Sibling
     })
 
+    local theme = config.Theme or Themes.Default
     local Notification = Linux.Instance("Frame", {
         Parent = NotificationHolder,
-        BackgroundColor3 = Color3.fromRGB(15, 15, 15),
-        BorderColor3 = Color3.fromRGB(255, 255, 255),
+        BackgroundColor3 = theme.WindowBackground,
+        BorderColor3 = theme.WindowBorder,
         BorderSizePixel = 2,
         Size = UDim2.new(0, notificationWidth, 0, notificationHeight),
         Position = UDim2.new(1, 10, 1, -notificationHeight - 10),
@@ -100,7 +135,7 @@ function Linux:Notify(config)
         Position = UDim2.new(0, 5, 0, 5),
         Font = Enum.Font.SourceSansBold,
         Text = config.Title or "Notification",
-        TextColor3 = Color3.fromRGB(255, 255, 255),
+        TextColor3 = theme.Text,
         TextSize = 16,
         TextXAlignment = Enum.TextXAlignment.Left,
         TextYAlignment = Enum.TextYAlignment.Top,
@@ -114,7 +149,7 @@ function Linux:Notify(config)
         Position = UDim2.new(0, 5, 0, 25),
         Font = Enum.Font.SourceSans,
         Text = config.Content or "Content",
-        TextColor3 = Color3.fromRGB(255, 255, 255),
+        TextColor3 = theme.Text,
         TextSize = 14,
         TextWrapped = true,
         TextXAlignment = Enum.TextXAlignment.Left,
@@ -130,7 +165,7 @@ function Linux:Notify(config)
             Position = UDim2.new(0, 5, 0, 45),
             Font = Enum.Font.SourceSans,
             Text = config.SubContent,
-            TextColor3 = Color3.fromRGB(255, 255, 255),
+            TextColor3 = theme.Text,
             TextSize = 12,
             TextWrapped = true,
             TextXAlignment = Enum.TextXAlignment.Left,
@@ -155,7 +190,7 @@ function Linux:Notify(config)
 
     local ProgressFill = Linux.Instance("Frame", {
         Parent = ProgressBar,
-        BackgroundColor3 = Color3.fromRGB(0, 120, 255),
+        BackgroundColor3 = theme.Accent,
         Size = UDim2.new(0, 0, 1, 0),
         ZIndex = 101,
         BorderSizePixel = 0
@@ -184,6 +219,8 @@ end
 function Linux.Create(config)
     local randomName = "UI_" .. tostring(math.random(100000, 999999))
     local shouldSave = config.Save ~= false
+    local configFolder = config.ConfigFolder or "LinuxUI"
+    local theme = Themes[config.Theme or "Default"] or Themes.Default
 
     for _, v in pairs(game.CoreGui:GetChildren()) do
         if v:IsA("ScreenGui") and v.Name:match("^UI_%d+$") then
@@ -205,7 +242,7 @@ function Linux.Create(config)
     local isMobile = InputService.TouchEnabled and not InputService.KeyboardEnabled
     local uiSize = isMobile and (config.SizeMobile or UDim2.fromOffset(300, 500)) or (config.SizePC or UDim2.fromOffset(550, 355))
 
-    local shadowOffset = 10
+    local shadowOffset = 12
     local shadowSize = UDim2.new(0, uiSize.X.Offset + shadowOffset, 0, uiSize.Y.Offset + shadowOffset)
 
     local MainShadow = Linux.Instance("ImageLabel", {
@@ -215,16 +252,18 @@ function Linux.Create(config)
         Position = UDim2.new(0.5, -(uiSize.X.Offset + shadowOffset) / 2, 0.5, -(uiSize.Y.Offset + shadowOffset) / 2),
         Image = "rbxassetid://1316045217",
         ImageColor3 = Color3.fromRGB(0, 0, 0),
-        ImageTransparency = 0.9,
+        ImageTransparency = 0.8,
         ScaleType = Enum.ScaleType.Slice,
         SliceCenter = Rect.new(10, 10, 246, 246),
-        ZIndex = 0
+        ZIndex = 0,
+        BorderSizePixel = 1,
+        BorderColor3 = Color3.fromRGB(255, 0, 0)
     })
 
     local Main = Linux.Instance("Frame", {
         Parent = LinuxUI,
-        BackgroundColor3 = Color3.fromRGB(19, 19, 19),
-        BorderColor3 = Color3.fromRGB(255, 255, 255),
+        BackgroundColor3 = theme.WindowBackground,
+        BorderColor3 = theme.WindowBorder,
         BorderSizePixel = 2,
         Size = uiSize,
         Position = UDim2.new(0.5, -uiSize.X.Offset / 2, 0.5, -uiSize.Y.Offset / 2),
@@ -261,8 +300,8 @@ function Linux.Create(config)
 
     local TopBar = Linux.Instance("Frame", {
         Parent = Main,
-        BackgroundColor3 = Color3.fromRGB(19, 19, 19),
-        BorderColor3 = Color3.fromRGB(255, 255, 255),
+        BackgroundColor3 = theme.WindowBackground,
+        BorderColor3 = theme.WindowBorder,
         BorderSizePixel = 2,
         Size = UDim2.new(1, 0, 0, 25),
         ZIndex = 2
@@ -280,7 +319,7 @@ function Linux.Create(config)
         Position = UDim2.new(0, 5, 0, 0),
         Font = Enum.Font.SourceSansBold,
         Text = config.Name or "Linux UI",
-        TextColor3 = Color3.fromRGB(255, 255, 255),
+        TextColor3 = theme.Text,
         TextSize = 16,
         TextXAlignment = Enum.TextXAlignment.Left,
         AutomaticSize = Enum.AutomaticSize.X,
@@ -330,7 +369,7 @@ function Linux.Create(config)
         Size = UDim2.new(1, -(config.TabWidth or 110), 1, -25),
         ZIndex = 1,
         BorderSizePixel = 2,
-        BorderColor3 = Color3.fromRGB(50, 50, 50)
+        BorderColor3 = theme.SectionBorder
     })
 
     local isHidden = false
@@ -354,13 +393,13 @@ function Linux.Create(config)
 
         local TabBtn = Linux.Instance("TextButton", {
             Parent = TabHolder,
-            BackgroundColor3 = Color3.fromRGB(22, 22, 22),
-            BorderColor3 = Color3.fromRGB(255, 255, 255),
+            BackgroundColor3 = theme.TabBackground,
+            BorderColor3 = theme.TabBorder,
             BorderSizePixel = 2,
             Size = UDim2.new(1, -5, 0, 28),
             Font = Enum.Font.SourceSans,
             Text = "",
-            TextColor3 = Color3.fromRGB(255, 255, 255),
+            TextColor3 = theme.Text,
             TextSize = 14,
             ZIndex = 2,
             AutoButtonColor = false,
@@ -381,7 +420,7 @@ function Linux.Create(config)
                 Size = UDim2.new(0, 16, 0, 16),
                 Position = UDim2.new(0, 10, 0.5, -8),
                 Image = config.Icon.Image or "rbxassetid://10747384394",
-                ImageColor3 = Color3.fromRGB(255, 255, 255),
+                ImageColor3 = theme.Text,
                 ZIndex = 2
             })
         end
@@ -393,7 +432,7 @@ function Linux.Create(config)
             Position = UDim2.new(0, config.Icon and config.Icon.Enabled and 31 or 10, 0, 0),
             Font = Enum.Font.SourceSans,
             Text = config.Name,
-            TextColor3 = Color3.fromRGB(255, 255, 255),
+            TextColor3 = theme.Text,
             TextSize = 14,
             TextXAlignment = Enum.TextXAlignment.Left,
             ZIndex = 2
@@ -418,7 +457,7 @@ function Linux.Create(config)
             ScrollBarThickness = 0,
             ZIndex = 1,
             BorderSizePixel = 2,
-            BorderColor3 = Color3.fromRGB(50, 50, 50),
+            BorderColor3 = theme.SectionBorder,
             ScrollingEnabled = true,
             CanvasPosition = Vector2.new(0, 0)
         })
@@ -446,7 +485,7 @@ function Linux.Create(config)
             ScrollBarThickness = 0,
             ZIndex = 1,
             BorderSizePixel = 2,
-            BorderColor3 = Color3.fromRGB(50, 50, 50),
+            BorderColor3 = theme.SectionBorder,
             ScrollingEnabled = true,
             CanvasPosition = Vector2.new(0, 0)
         })
@@ -466,7 +505,7 @@ function Linux.Create(config)
 
         local TitleFrame = Linux.Instance("Frame", {
             Parent = Content,
-            BackgroundColor3 = Color3.fromRGB(19, 19, 19),
+            BackgroundColor3 = theme.SectionBackground,
             BorderSizePixel = 0,
             Size = UDim2.new(1, -5, 0, 30),
             Position = UDim2.new(0, 5, 0, 0),
@@ -481,7 +520,7 @@ function Linux.Create(config)
             Position = UDim2.new(0, 0, 0, 0),
             Font = Enum.Font.SourceSansBold,
             Text = config.Name,
-            TextColor3 = Color3.fromRGB(255, 255, 255),
+            TextColor3 = theme.Text,
             TextSize = 26,
             TextXAlignment = Enum.TextXAlignment.Left,
             TextYAlignment = Enum.TextYAlignment.Center,
@@ -492,31 +531,31 @@ function Linux.Create(config)
             for _, tab in pairs(Tabs) do
                 tab.Content.Visible = false
                 tab.TitleFrame.Visible = false
-                tab.Text.TextColor3 = Color3.fromRGB(255, 255, 255)
-                tab.Button.BackgroundColor3 = Color3.fromRGB(22, 22, 22)
+                tab.Text.TextColor3 = theme.Text
+                tab.Button.BackgroundColor3 = theme.TabBackground
                 for _, child in pairs(tab.Button:GetChildren()) do
                     if child:IsA("UIGradient") then
                         child:Destroy()
                     end
                 end
                 if tab.Icon then
-                    tab.Icon.ImageColor3 = Color3.fromRGB(255, 255, 255)
+                    tab.Icon.ImageColor3 = theme.Text
                 end
             end
             TabContent.Visible = true
             TitleFrame.Visible = true
-            TabText.TextColor3 = Color3.fromRGB(255, 255, 255)
-            TabBtn.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+            TabText.TextColor3 = theme.Text
+            TabBtn.BackgroundColor3 = theme.WindowBackground
             TabGradient = Linux.Instance("UIGradient", {
                 Parent = TabBtn,
                 Color = ColorSequence.new({
-                    ColorSequenceKeypoint.new(0, Color3.fromRGB(0, 120, 255)),
-                    ColorSequenceKeypoint.new(1, Color3.fromRGB(0, 0, 139))
+                    ColorSequenceKeypoint.new(0, theme.Accent),
+                    ColorSequenceKeypoint.new(1, Color3.fromRGB(theme.Accent.R * 255 * 0.7, theme.Accent.G * 255 * 0.7, theme.Accent.B * 255 * 0.7))
                 }),
                 Rotation = 45
             })
             if TabIcon then
-                TabIcon.ImageColor3 = Color3.fromRGB(255, 255, 255)
+                TabIcon.ImageColor3 = theme.Text
             end
             CurrentTab = tabIndex
             Container1.CanvasPosition = Vector2.new(0, 0)
@@ -554,8 +593,8 @@ function Linux.Create(config)
 
             local BtnFrame = Linux.Instance("Frame", {
                 Parent = container,
-                BackgroundColor3 = Color3.fromRGB(22, 22, 22),
-                BorderColor3 = Color3.fromRGB(50, 50, 50),
+                BackgroundColor3 = theme.ObjectBackground,
+                BorderColor3 = theme.ObjectBorder,
                 BorderSizePixel = 2,
                 Size = UDim2.new(1, -5, 0, 34),
                 ZIndex = 2,
@@ -574,7 +613,7 @@ function Linux.Create(config)
                 Position = UDim2.new(0, 0, 0, 0),
                 Font = Enum.Font.Gotham,
                 Text = config.Name,
-                TextColor3 = Color3.fromRGB(255, 255, 255),
+                TextColor3 = theme.Text,
                 TextSize = 14,
                 TextXAlignment = Enum.TextXAlignment.Left,
                 ZIndex = 2,
@@ -592,13 +631,13 @@ function Linux.Create(config)
                 Size = UDim2.new(0, 14, 0, 14),
                 Position = UDim2.new(1, -20, 0.5, -7),
                 Image = "rbxassetid://10709791437",
-                ImageColor3 = Color3.fromRGB(255, 255, 255),
+                ImageColor3 = theme.Text,
                 ZIndex = 2
             })
 
-            local hoverColor = Color3.fromRGB(40, 40, 40)
-            local clickColor = Color3.fromRGB(0, 120, 255)
-            local originalColor = Color3.fromRGB(22, 22, 22)
+            local hoverColor = Color3.fromRGB(theme.ObjectBackground.R * 255 * 1.2, theme.ObjectBackground.G * 255 * 1.2, theme.ObjectBackground.B * 255 * 1.2)
+            local clickColor = theme.Accent
+            local originalColor = theme.ObjectBackground
             local tweenInfo = TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
 
             Btn.MouseEnter:Connect(function()
@@ -640,8 +679,8 @@ function Linux.Create(config)
 
             local Toggle = Linux.Instance("Frame", {
                 Parent = container,
-                BackgroundColor3 = Color3.fromRGB(22, 22, 22),
-                BorderColor3 = Color3.fromRGB(50, 50, 50),
+                BackgroundColor3 = theme.ObjectBackground,
+                BorderColor3 = theme.ObjectBorder,
                 BorderSizePixel = 2,
                 Size = UDim2.new(1, -5, 0, 34),
                 ZIndex = 2,
@@ -660,7 +699,7 @@ function Linux.Create(config)
                 Position = UDim2.new(0, 5, 0, 0),
                 Font = Enum.Font.Gotham,
                 Text = config.Name,
-                TextColor3 = Color3.fromRGB(255, 255, 255),
+                TextColor3 = theme.Text,
                 TextSize = 14,
                 TextXAlignment = Enum.TextXAlignment.Left,
                 ZIndex = 2
@@ -686,7 +725,7 @@ function Linux.Create(config)
                 Size = UDim2.new(0, 14, 0, 14),
                 Position = UDim2.new(0.5, -7, 0.5, -7),
                 Image = "rbxassetid://10709790644",
-                ImageColor3 = Color3.fromRGB(255, 255, 255),
+                ImageColor3 = theme.Text,
                 Visible = false,
                 ZIndex = 3
             })
@@ -694,14 +733,14 @@ function Linux.Create(config)
             local Gradient = Linux.Instance("UIGradient", {
                 Parent = ToggleBox,
                 Color = ColorSequence.new({
-                    ColorSequenceKeypoint.new(0, Color3.fromRGB(0, 120, 255)),
-                    ColorSequenceKeypoint.new(1, Color3.fromRGB(0, 0, 139))
+                    ColorSequenceKeypoint.new(0, theme.Accent),
+                    ColorSequenceKeypoint.new(1, Color3.fromRGB(theme.Accent.R * 255 * 0.7, theme.Accent.G * 255 * 0.7, theme.Accent.B * 255 * 0.7))
                 }),
                 Rotation = 45,
                 Enabled = false
             })
 
-            local State = Linux:LoadConfig("Toggle_" .. config.Name, config.Default or false, shouldSave)
+            local State = Linux:LoadConfig("Toggle_" .. config.Name, config.Default or false, shouldSave, configFolder)
             local isToggling = false
 
             local function UpdateToggle()
@@ -711,7 +750,7 @@ function Linux.Create(config)
                 if State then
                     CheckIcon.Visible = true
                     Gradient.Enabled = true
-                    TweenService:Create(ToggleBox, tween, {BackgroundColor3 = Color3.fromRGB(255, 255, 255)}):Play()
+                    TweenService:Create(ToggleBox, tween, {BackgroundColor3 = theme.WindowBackground}):Play()
                 else
                     CheckIcon.Visible = false
                     Gradient.Enabled = false
@@ -728,7 +767,7 @@ function Linux.Create(config)
                 if (input.UserInputType == Enum.UserInputType.Touch or input.UserInputType == Enum.UserInputType.MouseButton1) and not isToggling then
                     State = not State
                     UpdateToggle()
-                    Linux:SaveConfig("Toggle_" .. config.Name, State, shouldSave)
+                    Linux:SaveConfig("Toggle_" .. config.Name, State, shouldSave, configFolder)
                     spawn(function() Linux:SafeCallback(config.Callback, State) end)
                 end
             end)
@@ -748,8 +787,8 @@ function Linux.Create(config)
 
             local Dropdown = Linux.Instance("Frame", {
                 Parent = container,
-                BackgroundColor3 = Color3.fromRGB(22, 22, 22),
-                BorderColor3 = Color3.fromRGB(50, 50, 50),
+                BackgroundColor3 = theme.ObjectBackground,
+                BorderColor3 = theme.ObjectBorder,
                 BorderSizePixel = 2,
                 Size = UDim2.new(1, -5, 0, 34),
                 ZIndex = 2,
@@ -767,7 +806,7 @@ function Linux.Create(config)
                 Size = UDim2.new(1, 0, 1, 0),
                 Font = Enum.Font.Gotham,
                 Text = "",
-                TextColor3 = Color3.fromRGB(255, 255, 255),
+                TextColor3 = theme.Text,
                 TextSize = 14,
                 ZIndex = 2,
                 AutoButtonColor = false
@@ -780,14 +819,14 @@ function Linux.Create(config)
                 Position = UDim2.new(0, 5, 0, 0),
                 Font = Enum.Font.Gotham,
                 Text = config.Name,
-                TextColor3 = Color3.fromRGB(255, 255, 255),
+                TextColor3 = theme.Text,
                 TextSize = 14,
                 TextXAlignment = Enum.TextXAlignment.Left,
                 ZIndex = 2
             })
 
             local Options = config.Options or {}
-            local SelectedValue = Linux:LoadConfig("Dropdown_" .. config.Name, config.Default or (Options[1] or "None"), shouldSave)
+            local SelectedValue = Linux:LoadConfig("Dropdown_" .. config.Name, config.Default or (Options[1] or "None"), shouldSave, configFolder)
 
             local Selected = Linux.Instance("TextLabel", {
                 Parent = DropdownButton,
@@ -795,7 +834,7 @@ function Linux.Create(config)
                 Size = UDim2.new(1, -40, 1, 0),
                 Font = Enum.Font.Gotham,
                 Text = tostring(SelectedValue),
-                TextColor3 = Color3.fromRGB(255, 255, 255),
+                TextColor3 = theme.Text,
                 TextSize = 14,
                 TextXAlignment = Enum.TextXAlignment.Right,
                 ZIndex = 2
@@ -807,14 +846,14 @@ function Linux.Create(config)
                 Size = UDim2.new(0, 14, 0, 14),
                 Position = UDim2.new(1, -20, 0.5, -7),
                 Image = "rbxassetid://10709767827",
-                ImageColor3 = Color3.fromRGB(255, 255, 255),
+                ImageColor3 = theme.Text,
                 ZIndex = 2
             })
 
             local DropFrame = Linux.Instance("ScrollingFrame", {
                 Parent = container,
-                BackgroundColor3 = Color3.fromRGB(23, 23, 23),
-                BorderColor3 = Color3.fromRGB(50, 50, 50),
+                BackgroundColor3 = theme.DropdownOptionBackground,
+                BorderColor3 = theme.ObjectBorder,
                 BorderSizePixel = 2,
                 Size = UDim2.new(1, -5, 0, 0),
                 CanvasSize = UDim2.new(0, 0, 0, 0),
@@ -872,13 +911,13 @@ function Linux.Create(config)
                     for _, opt in pairs(Options) do
                         local OptBtn = Linux.Instance("TextButton", {
                             Parent = DropFrame,
-                            BackgroundColor3 = Color3.fromRGB(27, 27, 27),
-                            BorderColor3 = Color3.fromRGB(50, 50, 50),
+                            BackgroundColor3 = theme.DropdownOptionBackground,
+                            BorderColor3 = theme.ObjectBorder,
                             BorderSizePixel = 2,
                             Size = UDim2.new(1, -5, 0, 25),
                             Font = Enum.Font.Gotham,
                             Text = tostring(opt),
-                            TextColor3 = opt == SelectedValue and Color3.fromRGB(255, 255, 255) or Color3.fromRGB(255, 255, 255),
+                            TextColor3 = opt == SelectedValue and theme.Text or theme.DisabledText,
                             TextSize = 14,
                             TextXAlignment = Enum.TextXAlignment.Center,
                             ZIndex = 3,
@@ -895,10 +934,10 @@ function Linux.Create(config)
                             Selected.Text = tostring(opt)
                             for _, btn in pairs(DropFrame:GetChildren()) do
                                 if btn:IsA("TextButton") then
-                                    btn.TextColor3 = btn.Text == tostring(opt) and Color3.fromRGB(255, 255, 255) or Color3.fromRGB(255, 255, 255)
+                                    btn.TextColor3 = btn.Text == tostring(opt) and theme.Text or theme.DisabledText
                                 end
                             end
-                            Linux:SaveConfig("Dropdown_" .. config.Name, SelectedValue, shouldSave)
+                            Linux:SaveConfig("Dropdown_" .. config.Name, SelectedValue, shouldSave, configFolder)
                             PopulateOptions()
                             spawn(function() Linux:SafeCallback(config.Callback, opt) end)
                         end)
@@ -921,7 +960,7 @@ function Linux.Create(config)
                 Options = newOptions or {}
                 SelectedValue = Options[1] or "None"
                 Selected.Text = tostring(SelectedValue)
-                Linux:SaveConfig("Dropdown_" .. config.Name, SelectedValue, shouldSave)
+                Linux:SaveConfig("Dropdown_" .. config.Name, SelectedValue, shouldSave, configFolder)
                 PopulateOptions()
                 spawn(function() Linux:SafeCallback(config.Callback, SelectedValue) end)
             end
@@ -932,10 +971,10 @@ function Linux.Create(config)
                     Selected.Text = tostring(value)
                     for _, btn in pairs(DropFrame:GetChildren()) do
                         if btn:IsA("TextButton") then
-                            btn.TextColor3 = btn.Text == tostring(value) and Color3.fromRGB(255, 255, 255) or Color3.fromRGB(255, 255, 255)
+                            btn.TextColor3 = btn.Text == tostring(value) and theme.Text or theme.DisabledText
                         end
                     end
-                    Linux:SaveConfig("Dropdown_" .. config.Name, SelectedValue, shouldSave)
+                    Linux:SaveConfig("Dropdown_" .. config.Name, SelectedValue, shouldSave, configFolder)
                     spawn(function() Linux:SafeCallback(config.Callback, value) end)
                 end
             end
@@ -960,8 +999,8 @@ function Linux.Create(config)
 
             local Slider = Linux.Instance("Frame", {
                 Parent = container,
-                BackgroundColor3 = Color3.fromRGB(22, 22, 22),
-                BorderColor3 = Color3.fromRGB(50, 50, 50),
+                BackgroundColor3 = theme.ObjectBackground,
+                BorderColor3 = theme.ObjectBorder,
                 BorderSizePixel = 2,
                 Size = UDim2.new(1, -5, 0, 34),
                 ZIndex = 2,
@@ -980,7 +1019,7 @@ function Linux.Create(config)
                 Position = UDim2.new(0, 5, 0, 2),
                 Font = Enum.Font.Gotham,
                 Text = config.Name,
-                TextColor3 = Color3.fromRGB(255, 255, 255),
+                TextColor3 = theme.Text,
                 TextSize = 14,
                 TextXAlignment = Enum.TextXAlignment.Left,
                 ZIndex = 2
@@ -1007,7 +1046,7 @@ function Linux.Create(config)
                 Position = UDim2.new(1, -45, 0, 2),
                 Font = Enum.Font.Gotham,
                 Text = "",
-                TextColor3 = Color3.fromRGB(255, 255, 255),
+                TextColor3 = theme.Text,
                 TextSize = 14,
                 TextXAlignment = Enum.TextXAlignment.Right,
                 ZIndex = 2
@@ -1024,10 +1063,8 @@ function Linux.Create(config)
             Linux.Instance("UIGradient", {
                 Parent = FillBar,
                 Color = ColorSequence.new({
-                    ColorSequenceKeypoint.new(0, Color3.fromRGB(0, 120, 255)),
-                    ColorSequenceKeypoint.new(0.33, Color3.fromRGB(0, 100, 255)),
-                    ColorSequenceKeypoint.new(0.67, Color3.fromRGB(0, 80, 255)),
-                    ColorSequenceKeypoint.new(1, Color3.fromRGB(0, 60, 255))
+                    ColorSequenceKeypoint.new(0, theme.Accent),
+                    ColorSequenceKeypoint.new(1, Color3.fromRGB(theme.Accent.R * 255 * 0.7, theme.Accent.G * 255 * 0.7, theme.Accent.B * 255 * 0.7))
                 }),
                 Rotation = 45
             })
@@ -1039,7 +1076,7 @@ function Linux.Create(config)
 
             local Min = config.Min or 0
             local Max = config.Max or 100
-            local Default = Linux:LoadConfig("Slider_" .. config.Name, config.Default or Min, shouldSave)
+            local Default = Linux:LoadConfig("Slider_" .. config.Name, config.Default or Min, shouldSave, configFolder)
             local Value = Default
 
             local function AnimateValueLabel()
@@ -1058,7 +1095,7 @@ function Linux.Create(config)
                 local percentage = math.floor((Value - Min) / (Max - Min) * 100 + 0.5)
                 ValueLabel.Text = tostring(percentage) .. "%"
                 AnimateValueLabel()
-                Linux:SaveConfig("Slider_" .. config.Name, Value, shouldSave)
+                Linux:SaveConfig("Slider_" .. config.Name, Value, shouldSave, configFolder)
                 spawn(function() Linux:SafeCallback(config.Callback, Value) end)
             end
 
@@ -1091,7 +1128,7 @@ function Linux.Create(config)
                 local percentage = math.floor((Value - Min) / (Max - Min) * 100 + 0.5)
                 ValueLabel.Text = tostring(percentage) .. "%"
                 AnimateValueLabel()
-                Linux:SaveConfig("Slider_" .. config.Name, Value, shouldSave)
+                Linux:SaveConfig("Slider_" .. config.Name, Value, shouldSave, configFolder)
                 spawn(function() Linux:SafeCallback(config.Callback, Value) end)
             end
 
@@ -1116,8 +1153,8 @@ function Linux.Create(config)
 
             local Input = Linux.Instance("Frame", {
                 Parent = container,
-                BackgroundColor3 = Color3.fromRGB(22, 22, 22),
-                BorderColor3 = Color3.fromRGB(50, 50, 50),
+                BackgroundColor3 = theme.ObjectBackground,
+                BorderColor3 = theme.ObjectBorder,
                 BorderSizePixel = 2,
                 Size = UDim2.new(1, -5, 0, 34),
                 ZIndex = 2,
@@ -1136,7 +1173,7 @@ function Linux.Create(config)
                 Position = UDim2.new(0, 5, 0, 0),
                 Font = Enum.Font.Gotham,
                 Text = config.Name,
-                TextColor3 = Color3.fromRGB(255, 255, 255),
+                TextColor3 = theme.Text,
                 TextSize = 14,
                 TextXAlignment = Enum.TextXAlignment.Left,
                 ZIndex = 2
@@ -1149,10 +1186,10 @@ function Linux.Create(config)
                 Size = UDim2.new(0.28, -5, 0, 26),
                 Position = UDim2.new(1, -55, 0.5, -12),
                 Font = Enum.Font.Gotham,
-                Text = Linux:LoadConfig("Input_" .. config.Name, config.Default or "", shouldSave),
+                Text = Linux:LoadConfig("Input_" .. config.Name, config.Default or "", shouldSave, configFolder),
                 PlaceholderText = config.Placeholder or "Text Here",
-                PlaceholderColor3 = Color3.fromRGB(255, 255, 255),
-                TextColor3 = Color3.fromRGB(255, 255, 255),
+                PlaceholderColor3 = theme.DisabledText,
+                TextColor3 = theme.Text,
                 TextSize = 14,
                 TextScaled = false,
                 TextTruncate = Enum.TextTruncate.AtEnd,
@@ -1181,7 +1218,7 @@ function Linux.Create(config)
 
             local function UpdateInput()
                 CheckTextBounds()
-                Linux:SaveConfig("Input_" .. config.Name, TextBox.Text, shouldSave)
+                Linux:SaveConfig("Input_" .. config.Name, TextBox.Text, shouldSave, configFolder)
                 spawn(function() Linux:SafeCallback(config.Callback, TextBox.Text) end)
             end
 
@@ -1210,7 +1247,7 @@ function Linux.Create(config)
 
             container.CanvasPosition = Vector2.new(0, 0)
             return {
-                Instance = Input,
+                Instance bandwidth usage for each user in real time, ensuring accurate monitoring without disrupting the user experience. Input,
                 SetValue = SetValue,
                 GetValue = function() return TextBox.Text end
             }
@@ -1227,8 +1264,8 @@ function Linux.Create(config)
 
             local LabelFrame = Linux.Instance("Frame", {
                 Parent = container,
-                BackgroundColor3 = Color3.fromRGB(22, 22, 22),
-                BorderColor3 = Color3.fromRGB(50, 50, 50),
+                BackgroundColor3 = theme.ObjectBackground,
+                BorderColor3 = theme.ObjectBorder,
                 BorderSizePixel = 2,
                 Size = UDim2.new(1, -5, 0, 34),
                 ZIndex = 2,
@@ -1247,7 +1284,7 @@ function Linux.Create(config)
                 Position = UDim2.new(0, 5, 0, 0),
                 Font = Enum.Font.Gotham,
                 Text = config.Text or "Label",
-                TextColor3 = Color3.fromRGB(255, 255, 255),
+                TextColor3 = theme.Text,
                 TextSize = 14,
                 TextXAlignment = Enum.TextXAlignment.Left,
                 TextTruncate = Enum.TextTruncate.AtEnd,
@@ -1326,7 +1363,7 @@ function Linux.Create(config)
                 Position = UDim2.new(0, 5, 0, 0),
                 Font = Enum.Font.SourceSansBold,
                 Text = config.Name,
-                TextColor3 = Color3.fromRGB(255, 255, 255),
+                TextColor3 = theme.Text,
                 TextSize = 18,
                 TextXAlignment = Enum.TextXAlignment.Left,
                 ZIndex = 2
@@ -1347,8 +1384,8 @@ function Linux.Create(config)
 
             local ParagraphFrame = Linux.Instance("Frame", {
                 Parent = container,
-                BackgroundColor3 = Color3.fromRGB(22, 22, 22),
-                BorderColor3 = Color3.fromRGB(50, 50, 50),
+                BackgroundColor3 = theme.ObjectBackground,
+                BorderColor3 = theme.ObjectBorder,
                 BorderSizePixel = 2,
                 Size = UDim2.new(1, -5, 0, 0),
                 AutomaticSize = Enum.AutomaticSize.Y,
@@ -1368,7 +1405,7 @@ function Linux.Create(config)
                 Position = UDim2.new(0, 5, 0, 5),
                 Font = Enum.Font.GothamBold,
                 Text = config.Title or "Paragraph",
-                TextColor3 = Color3.fromRGB(255, 255, 255),
+                TextColor3 = theme.Text,
                 TextSize = 16,
                 TextXAlignment = Enum.TextXAlignment.Left,
                 ZIndex = 2
@@ -1381,7 +1418,7 @@ function Linux.Create(config)
                 Position = UDim2.new(0, 5, 0, 25),
                 Font = Enum.Font.Gotham,
                 Text = config.Content or "Content",
-                TextColor3 = Color3.fromRGB(180, 180, 180),
+                TextColor3 = theme.DisabledText,
                 TextSize = 14,
                 TextXAlignment = Enum.TextXAlignment.Left,
                 TextWrapped = true,
@@ -1421,8 +1458,8 @@ function Linux.Create(config)
 
             local NotificationFrame = Linux.Instance("Frame", {
                 Parent = container,
-                BackgroundColor3 = Color3.fromRGB(22, 22, 22),
-                BorderColor3 = Color3.fromRGB(50, 50, 50),
+                BackgroundColor3 = theme.ObjectBackground,
+                BorderColor3 = theme.ObjectBorder,
                 BorderSizePixel = 2,
                 Size = UDim2.new(1, -5, 0, 34),
                 ZIndex = 2,
@@ -1441,7 +1478,7 @@ function Linux.Create(config)
                 Position = UDim2.new(0, 5, 0, 0),
                 Font = Enum.Font.Gotham,
                 Text = config.Name,
-                TextColor3 = Color3.fromRGB(255, 255, 255),
+                TextColor3 = theme.Text,
                 TextSize = 14,
                 TextXAlignment = Enum.TextXAlignment.Left,
                 ZIndex = 2
@@ -1454,7 +1491,7 @@ function Linux.Create(config)
                 Position = UDim2.new(0.5, 5, 0, 0),
                 Font = Enum.Font.Gotham,
                 Text = config.Default or "Notification",
-                TextColor3 = Color3.fromRGB(255, 255, 255),
+                TextColor3 = theme.Text,
                 TextSize = 14,
                 TextXAlignment = Enum.TextXAlignment.Right,
                 TextTruncate = Enum.TextTruncate.AtEnd,
